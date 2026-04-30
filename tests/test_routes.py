@@ -124,3 +124,103 @@ class TestAccountService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     # ADD YOUR TEST CASES HERE ...
+    ######################################################################
+    #  R E A D   A C C O U N T   T E S T S
+    ######################################################################
+    def test_get_account(self):
+        """It should Read a single Account"""
+        # Create an account first
+        test_account = self._create_accounts(1)[0]
+        
+        # Get the account
+        response = self.client.get(f"{BASE_URL}/{test_account.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        data = response.get_json()
+        self.assertEqual(data["id"], test_account.id)
+        self.assertEqual(data["name"], test_account.name)
+        self.assertEqual(data["email"], test_account.email)
+
+    def test_get_account_not_found(self):
+        """It should not Read an Account that doesn't exist"""
+        response = self.client.get(f"{BASE_URL}/99999")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    ######################################################################
+    #  U P D A T E   A C C O U N T   T E S T S
+    ######################################################################
+    def test_update_account(self):
+        """It should Update an existing Account"""
+        # Create an account
+        test_account = self._create_accounts(1)[0]
+        
+        # Update the account
+        updated_data = {
+            "name": "Updated Name",
+            "email": "updated@example.com",
+            "address": "123 New Street",
+            "phone_number": "555-9999"
+        }
+        response = self.client.put(
+            f"{BASE_URL}/{test_account.id}",
+            json=updated_data,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        data = response.get_json()
+        self.assertEqual(data["name"], "Updated Name")
+        self.assertEqual(data["email"], "updated@example.com")
+
+    def test_update_account_not_found(self):
+        """It should not Update an Account that doesn't exist"""
+        response = self.client.put(
+            f"{BASE_URL}/99999",
+            json={"name": "Doesn't Matter"},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    ######################################################################
+    #  D E L E T E   A C C O U N T   T E S T S
+    ######################################################################
+    def test_delete_account(self):
+        """It should Delete an Account"""
+        # Create an account
+        test_account = self._create_accounts(1)[0]
+        
+        # Delete the account
+        response = self.client.delete(f"{BASE_URL}/{test_account.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        
+        # Verify it's gone
+        response = self.client.get(f"{BASE_URL}/{test_account.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_account_not_found(self):
+        """It should not Delete an Account that doesn't exist"""
+        response = self.client.delete(f"{BASE_URL}/99999")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    ######################################################################
+    #  L I S T   A C C O U N T S   T E S T S
+    ######################################################################
+    def test_list_accounts(self):
+        """It should List all Accounts"""
+        # Create multiple accounts
+        self._create_accounts(3)
+        
+        # List all accounts
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        data = response.get_json()
+        self.assertEqual(len(data), 3)
+
+    def test_list_accounts_empty(self):
+        """It should return empty list when no Accounts exist"""
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        data = response.get_json()
+        self.assertEqual(data, [])
