@@ -57,12 +57,19 @@ def create_accounts():
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
 
+
 ######################################################################
 # LIST ALL ACCOUNTS
 ######################################################################
-
-# ... place you code here to LIST accounts ...
-
+@app.route('/accounts', methods=['GET'])
+def list_accounts():
+    """
+    List all Accounts
+    This endpoint will return all accounts as a JSON array
+    """
+    accounts = Account.all()
+    results = [account.serialize() for account in accounts]
+    return jsonify(results), status.HTTP_200_OK
 
 ######################################################################
 #  R E A D   A C C O U N T
