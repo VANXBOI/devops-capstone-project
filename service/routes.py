@@ -71,6 +71,7 @@ def list_accounts():
     results = [account.serialize() for account in accounts]
     return jsonify(results), status.HTTP_200_OK
 
+
 ######################################################################
 #  R E A D   A C C O U N T
 ######################################################################
@@ -105,11 +106,11 @@ def update_account(account_id):
     account = Account.query.get(account_id)
     if not account:
         return {"message": "Account not found"}, status.HTTP_404_NOT_FOUND
-    
+
     data = request.get_json()
     account.deserialize(data)
     account.update()
-    
+
     return account.serialize(), status.HTTP_200_OK
 
 
@@ -125,11 +126,10 @@ def delete_account(account_id):
     account = Account.query.get(account_id)
     if not account:
         return {"message": "Account not found"}, status.HTTP_404_NOT_FOUND
-    
-    account.delete()
-    
-    return "", status.HTTP_204_NO_CONTENT
 
+    account.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
 
 
 ######################################################################
