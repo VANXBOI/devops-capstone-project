@@ -11,10 +11,9 @@ spec:
     - name: branch
       type: string
       default: "main"
-    - name: build-image          # 👈 new parameter
+    - name: build-image
       type: string
-      description: "Full image name (registry/namespace/repo:tag)"
-      default: "us.icr.io/sn-labs-vanshagarwa2/accounts:latest"   # adjust as needed
+      description: "Full image name for the built container"
   tasks:
     - name: clone
       taskRef:
@@ -49,21 +48,42 @@ spec:
         - name: args
           value: "-v --with-spec --spec-color"
       workspaces:
-        - name: source          # the nose task expects 'source'
+        - name: source
           workspace: pipeline-workspace
       runAfter:
         - clone
 
-    - name: build               # 👈 new task
+    - name: build
       taskRef:
         name: buildah
-        kind: ClusterTask       # assuming you have buildah ClusterTask installed
+        kind: ClusterTask
       params:
         - name: IMAGE
           value: $(params.build-image)
       workspaces:
-        - name: source          # buildah expects a workspace named 'source' (or 'output' depends on version)
+        - name: source
           workspace: pipeline-workspace
       runAfter:
         - tests
         - lint
+
+    - name: deploy
+      taskRef:
+        name: openshift-client
+        kind: ClusterTask
+      params:
+        - name: SCRIPT
+          value: |
+            echo "Updating manifest with image: $(params.build-image)"
+            sed -i "s|IMAGE_NAME_HERE|$(params.build-image)|g" deploy/deployment.yaml
+            echo "Deployment YAML after substitution:"
+            cat deploy/deployment.yaml
+            echo "Applying manifests to OpenShift..."
+            oc apply -f deploy/
+            echo "Checking pods:"
+            oc get pods -l app=accounts
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      runAfter:
+        - build
