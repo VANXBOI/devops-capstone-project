@@ -131,11 +131,11 @@ class TestAccountService(TestCase):
         """It should Read a single Account"""
         # Create an account first
         test_account = self._create_accounts(1)[0]
-        
+
         # Get the account
         response = self.client.get(f"{BASE_URL}/{test_account.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         data = response.get_json()
         self.assertEqual(data["id"], test_account.id)
         self.assertEqual(data["name"], test_account.name)
@@ -153,7 +153,7 @@ class TestAccountService(TestCase):
         """It should Update an existing Account"""
         # Create an account
         test_account = self._create_accounts(1)[0]
-        
+
         # Update the account
         updated_data = {
             "name": "Updated Name",
@@ -167,7 +167,7 @@ class TestAccountService(TestCase):
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         data = response.get_json()
         self.assertEqual(data["name"], "Updated Name")
         self.assertEqual(data["email"], "updated@example.com")
@@ -188,11 +188,11 @@ class TestAccountService(TestCase):
         """It should Delete an Account"""
         # Create an account
         test_account = self._create_accounts(1)[0]
-        
+
         # Delete the account
         response = self.client.delete(f"{BASE_URL}/{test_account.id}")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        
+
         # Verify it's gone
         response = self.client.get(f"{BASE_URL}/{test_account.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -209,11 +209,11 @@ class TestAccountService(TestCase):
         """It should List all Accounts"""
         # Create multiple accounts
         self._create_accounts(3)
-        
+
         # List all accounts
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         data = response.get_json()
         self.assertEqual(len(data), 3)
 
@@ -221,6 +221,6 @@ class TestAccountService(TestCase):
         """It should return empty list when no Accounts exist"""
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         data = response.get_json()
         self.assertEqual(data, [])
