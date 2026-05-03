@@ -11,6 +11,10 @@ spec:
     - name: branch
       type: string
       default: "main"
+    - name: build-image          # 👈 new parameter
+      type: string
+      description: "Full image name (registry/namespace/repo:tag)"
+      default: "us.icr.io/sn-labs-vanshagarwa2/accounts:latest"   # adjust as needed
   tasks:
     - name: clone
       taskRef:
@@ -45,7 +49,21 @@ spec:
         - name: args
           value: "-v --with-spec --spec-color"
       workspaces:
-        - name: source
+        - name: source          # the nose task expects 'source'
           workspace: pipeline-workspace
       runAfter:
         - clone
+
+    - name: build               # 👈 new task
+      taskRef:
+        name: buildah
+        kind: ClusterTask       # assuming you have buildah ClusterTask installed
+      params:
+        - name: IMAGE
+          value: $(params.build-image)
+      workspaces:
+        - name: source          # buildah expects a workspace named 'source' (or 'output' depends on version)
+          workspace: pipeline-workspace
+      runAfter:
+        - tests
+        - lint
