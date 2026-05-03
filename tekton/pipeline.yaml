@@ -1,38 +1,51 @@
-tasks:
-  - name: clone
-    workspaces:
-      - name: output
-        workspace: pipeline-workspace
-    taskRef:
-      name: git-clone
-    params:
-      - name: url
-        value: $(params.repo-url)
-      - name: revision
-        value: $(params.branch)
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: cd-pipeline
+spec:
+  workspaces:
+    - name: pipeline-workspace
+  params:
+    - name: repo-url
+      type: string
+    - name: branch
+      type: string
+      default: "main"
+  tasks:
+    - name: clone
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.branch)
+      workspaces:
+        - name: output
+          workspace: pipeline-workspace
 
-  - name: lint
-    workspaces:
-      - name: output
-        workspace: pipeline-workspace
-    taskRef:
-      name: flake8-lint
-    params:
-      - name: args
-        value: ["--count","--max-complexity=10","--max-line-length=127","--statistics"]
-    runAfter:
-      - clone
+    - name: lint
+      taskRef:
+        name: flake8-lint
+      params:
+        - name: args
+          value: ["--count","--max-complexity=10","--max-line-length=127","--statistics"]
+      workspaces:
+        - name: output
+          workspace: pipeline-workspace
+      runAfter:
+        - clone
 
-  - name: tests
-    workspaces:
-      - name: source
-        workspace: pipeline-workspace
-    taskRef:
-      name: nose
-    params:
-  - name: database_uri
-    value: "sqlite:///test.db"
-  - name: args
-    value: "-v --with-spec --spec-color"
-    runAfter:
-      - clone
+    - name: tests
+      taskRef:
+        name: nose
+      params:
+        - name: database_uri
+          value: "sqlite:///test.db"
+        - name: args
+          value: "-v --with-spec --spec-color"
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      runAfter:
+        - clone
